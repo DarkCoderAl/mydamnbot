@@ -1,0 +1,959 @@
+// Discord.js
+var Discord = require('discord.js');
+
+// Express & Request
+var express = require('express');
+var request = require('request');
+
+// FileSync
+var fs = require('fs');
+
+var admins = [ "322480709623218206" ]
+
+// App Port Things
+var portx = process.env.PORT;
+var app = express();
+var http = require("http")
+app.set("port", portx);
+
+// JSON Load Datasheets
+let data2 = JSON.parse(fs.readFileSync("data.json"));
+
+// Keep Bot Online
+app.get("/", (request, response) => {
+  response.sendStatus(200);
+});
+app.listen(process.env.PORT);
+setInterval(() => {
+  http.get(`http://ultimate-giveaways.glitch.me`);
+}, 270000);
+
+var here = "@here"
+// Functions that can be run in code with function.functionname()
+var functions = {
+    isNumber: (n) => {
+      return typeof(n) != "boolean" && !isNaN(n);
+    },
+    perms: (perm) => {
+    switch (perm) {
+      case "channels": return "You need the MANAGE_CHANNELS perm to use this command."; break;
+      case "server": return "You need the MANAGE_GUILD or ADMINISTRATOR perm to use this command."; break;
+      case "kick": return "You need the KICK_MEMBERS perm to use this command."; break;
+      case "ban": return "You need the BAN_MEMBERS perm to use this command."; break;
+      case "everyone": return "You don't need any pemissions to use this command."; break;
+    }
+  },// Gives out a label for the perm input
+  replaceAll: (string, search, replacement) => {
+    return string.replace(new RegExp(search, 'g'), replacement);
+  },
+  checkPerm: (perm, member, id = "") => {
+    if(id !== "" && !client.fetchUser(id)) return false;
+    switch (perm) {
+      case "":
+      case "channels":
+        if(member.permissions.has("MANAGE_CHANNELS")) return true;
+        break;
+        case "server":
+          if(member.permissions.has("MANAGE_GUILD") || member.permissions.has("ADMINISTRATOR")) return true;
+          break;
+        case "kick":
+        if(member.permissions.has("KICK_MEMBERS")) return true;
+           break;
+        case "ban":
+        if(member.permissions.has("BAN_MEMBERS")) return true;
+           break;
+        case "perms":
+        if(member.permissions.has("MANAGE_ROLES")) return true;
+           break;
+        case "messages":
+        if(member.permissions.has("MANAGE_MESSAGES")) return true;
+          break;
+      default: return true;
+    }
+    return false;
+  },// Checks the member's permission
+    cHasPerm: (perm, guild) => {
+    if(perm === "ba") return true;
+    return functions.checkPerm(perm, guild.members.find("id", client.user.id), client.user.id);
+  },// Checks if CLIENT has perms
+  rcol: () => {
+    return Math.round(Math.random() * 16777215);
+  },// Random color
+  ec: (string) => {
+    if (typeof(string) === "string")
+      return string.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
+    else
+      return string;
+  },
+    mtc: (ms) => {
+    let x = ms / 1000;
+    let s = Math.floor(x % 60);
+    x /= 60;
+    let m = Math.floor(x % 60);
+    x /= 60;
+    let h = Math.floor(x % 24);
+    return `${h > 0 ? h + ":" : ""}${h > 0 ? (m > 9 ? m : "0" + m) : m}:${s > 9 ? s : "0" + s}`
+  },// Turns milliseconds into timeNo
+  mtrl: (milliseconds) => {
+    let x = milliseconds / 1000;
+    let s = Math.floor(x % 60);
+    x /= 60;
+    let m = Math.floor(x % 60);
+    x /= 60;
+    let h = Math.floor(x % 24);
+    x /= 24;
+    let d = Math.floor(x);
+    let timeStuff = "";
+    if (d > 0){
+      timeStuff += `${d} day${(d > 1 ? "s" : "") + ((h > 0 || m > 0 || s > 0) ? ", " : "")}, `;
+    }
+    if (h > 0){
+      timeStuff += `${h} hour${(h > 1 ? "s" : "") + ((m > 0 || s > 0) ? ", " : "")}`;
+    }
+    if (m > 0){
+      timeStuff += `${m} minute${(m > 1 ? "s" : "")  + (s > 0 ? ", " : "")}`;
+    }
+    if (s > 0) {
+      timeStuff += `${(d > 0 || h > 0 || m > 0) ? "and " : ""}${s} second${s > 1 ? "s" : ""}`;
+    }
+    return timeStuff;
+  },
+  sti: (string) => {
+    return string.replace(/[^0-9]/g, "");
+  },
+}
+
+// Initialize Discord Bot
+var client = new Discord.Client();
+
+// Connect discord.js to bot user
+client.login(process.env.TOKEN);
+
+// Setup Bot
+client.on('ready', function (evt, callback) {
+  client.user.setUsername("Dark generator");
+  console.log(client.user.tag + " online");
+
+  // Set Bot's Game and Status (idle status message: 'ms!help | Bot under construction! (Commands still work) | ')
+  client.user.setPresence({
+    game: {
+      type: 0,
+      name: 'Generating accounts'
+    },
+    status: "Online"
+  });
+});
+
+// Function for managing pro giveaways every minute
+function proGiveawayRun() {
+  let embed = new Discord.RichEmbed()
+  for (let messageId of data2.currentprogiveaways) {
+     var channel = data2.progiveaways[messageId][1]
+     var message = messageId;
+     var item = data2.progiveaways[messageId][2]
+     var time = data2.progiveaways[messageId][0] - 60000;
+     var desc = data2.progiveaways[messageId][4]
+     var url = data2.progiveaways[messageId][5]
+     var dm = data2.progiveaways[messageId][6]
+     data2.progiveaways[messageId][0] = data2.progiveaways[messageId][0] - 60000;
+     fs.writeFileSync("data.json", JSON.stringify(data2));
+    setTimeout(() => {
+     if (time === 0) {
+       client.channels.get(channel).fetchMessage(message).then(msg => {
+         var index = data2.currentprogiveaways.indexOf(messageId);
+         if (index !== -1) data2.currentprogiveaways.splice(index, 1);
+         fs.writeFileSync("data.json", JSON.stringify(data2));
+         var users = msg.reactions.array().filter(r => r.emoji.name === "tada2")[0].users.map(u => u.id);
+         var index = users.indexOf("481187001211682816");
+         if (index !== -1) users.splice(index, 1);
+         var winner = users[Math.floor(Math.random()*users.length)];
+         var userWinner = client.users.get(winner)
+         embed.setAuthor("We Have A Winner!")
+         embed.setTitle(item)
+         embed.setDescription(`${desc}\n\n<:tada2:458078387060211714> ${userWinner} won the ${item}! <:tada2:458078387060211714>`)
+         embed.setColor("#0cf0f4")
+         embed.setTimestamp()
+         embed.setImage(url)
+         embed.setFooter(`Congragulations!`)
+         msg.edit(embed)
+         client.channels.get(channel).send(`${userWinner} won the ${item}!`)
+         client.users.get(data2.progiveaways[messageId][1]).send(`${userWinner} won the ${item}! Be sure to give them their prize!`)
+         client.users.get(winner).send(`**You won the ${item}!**\n${dm}`)
+       });
+     } else {
+       client.channels.get(channel).fetchMessage(message).then(msg => {
+         embed.setTitle(item)
+         embed.setDescription(`${desc}\n\nReact with <:tada2:458078387060211714> to join in!\n**Time Remaining:** \`${functions.mtrl(data2.progiveaways[messageId][0])}\``)
+         embed.setColor("#0cf0f4")
+         embed.setTimestamp()
+         embed.setImage(url)
+         embed.setFooter(`Good Luck!`)
+         msg.edit(embed)
+       });
+     }}, 5000)
+  }
+}
+
+// Run giveaway managment scripts (every minute)
+setInterval(proGiveawayRun, 60000);
+
+// All Bot Commands
+var commands = {
+  /*suggest: {
+    aliases:[""],
+    usage: "suggest (suggestion)",
+    description: "Send a suggestion!",
+    permissions:"none",
+    category:"other",
+    do: (message,content) => {
+      var suggestion = message.content.substring(9)
+      message.channel.send("Your suggestion has been sent")
+      let embed = new Discord.RichEmbed()
+      embed.setAuthor("New Suggestion",message.author.avatarURL)
+      embed.setTitle(`${message.author.tag} suggests...`)
+      embed.setDescription(suggestion)
+      embed.setTimestamp()
+      embed.setColor(0x00D458)
+      embed.setFooter("Suggestion")
+      client.channels.get("538756142172602389").send(embed).then(message => {
+        message.react("👍").then(() => {
+        message.react("👎")
+        
+        
+        });
+      }) 
+        
+    }
+  },*/
+    steamcode: {
+    aliases:["steamcode"],
+    usage: "+steamcode",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["The Steam Gift Code: H07ZD-C00Z4-4NGHA"
+,"The Steam Gift Code: Y5A6G-OJ4PF-BNFMQ"
+,"The Steam Gift Code: Y59N2-IWWY3-GDATR"
+,"The Steam Gift Code: 4L9Y6-66CYD-AXLSF"
+,"The Steam Gift Code: 6CH2C-EI9JV-U4I9W"
+,"The Steam Gift Code: WMLVJ-I3PXQ-PYTCR"
+,"The Steam Gift Code: XQ6MG-5RRO2-6T6VE"
+,"The Steam Gift Code: AU6VB-H1PYF-IUHXY"
+,"The Steam Gift Code: 4S45X-5E39C-AC1L7"
+,"The Steam Gift Code: HKWT6-XJ3HK-EJ91F"
+,"The Steam Gift Code: UPVR4-ADBYK-J5IQ8"
+,"The Steam Gift Code: 8XE20-4DV71-SPK2T"
+,"The Steam Gift Code: LVMQG-RHQMG-Y6B4Y"
+,"The Steam Gift Code: GIJ2P-XP0F4-KFZFN"
+,"The Steam Gift Code: XHG7F-09A0V-42WJ7"
+,"The Steam Gift Code: S2JT4-X5GF0-87KR4"
+,"The Steam Gift Code: APSK2-1NJ3Y-EL1J3"
+,"The Steam Gift Code: TKKG7-JY2WZ-9719A"
+,"The Steam Gift Code: PAP7R-5UMS5-SKUEE"
+,"The Steam Gift Code: KWKL7-E6WYC-9RAKI"
+,"The Steam Gift Code: LCQWF-T92S2-CR7BL"
+,"The Steam Gift Code: QNHVJ-6YPHN-79I7U"
+,"The Steam Gift Code: DZBW4-XSLFU-EBX9C"
+,"The Steam Gift Code: CZMRH-VOHQ9-FG14O"
+,"The Steam Gift Code: GU6XY-3X77D-LSVVY"
+,"The Steam Gift Code: GBK1S-M13FU-JIVU8"
+,"The Steam Gift Code: 5OH5E-O0GA6-SLS6I"
+,"The Steam Gift Code: J5PYT-R4HYS-Q2LQK"
+,"The Steam Gift Code: JXX5B-SZZ0E-Y7M5L"
+,"The Steam Gift Code: 3Z1EU-PEMIP-M87VL"
+,"The Steam Gift Code: 2XY6G-1CSEH-UF02B"
+,"The Steam Gift Code: JH3IG-4EL8Q-7CKNI"
+,"The Steam Gift Code: EG72M-9GVZ0-7HY5V"
+,"The Steam Gift Code: H1BQX-FXQF8-P0N7C"
+,"The Steam Gift Code: 5FQU6-C6FD2-2DCZ9"
+,"The Steam Gift Code: RZLQO-XEAR8-K7FWO"
+,"The Steam Gift Code: DU5IG-FD82I-NX20D"
+,"The Steam Gift Code: UZY6D-G8A4J-09ASG"
+,"The Steam Gift Code: S7AH8-TOIBH-VWENU"
+,"The Steam Gift Code: 1WOKT-R0POZ-8JQDI"
+,"The Steam Gift Code: SZGX6-MLJGN-I51CD"
+,"The Steam Gift Code: AWE09-94T6C-9NBE4"
+,"The Steam Gift Code: B1UUS-F1BW9-FQCN9"
+,"The Steam Gift Code: FCOZU-N7VQT-RYF7O"
+,"The Steam Gift Code: VL1OJ-8GS28-CTZXI"
+,"The Steam Gift Code: ZZJMO-VO5IH-1NV9N"
+,"The Steam Gift Code: 15SJE-2PPX6-MSN84"
+,"The Steam Gift Code: P4FNK-ZPNDY-GZQ5H"
+,"The Steam Gift Code: 8MTKL-TGNLE-M66QL"
+,"The Steam Gift Code: 6JVJC-PHWQA-LX9YM"
+] 
+      var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "supporter") return message.channel.send("this is not the supporter channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Supporter"].includes(r.name)) )  return    message.author.send(sayings[result]); // if member is a botadmin, display this too
+    }  }, 
+    netflix: {
+    aliases:["netflix"],
+    usage: "+netflix",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["Filling Soon!"] 
+      var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "supporter") return message.channel.send("this is not the supporter channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Supporter"].includes(r.name)) ) return message.author.send(sayings[result]); // if member is a botadmin, display this too
+    }  }, 
+    paypal: {
+    aliases:["paypal"],
+    usage: "+paypal",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["Filling Soon!"] 
+      var result = Math.floor((Math.random() * sayings.length) + 0)
+            if (message.channel.name != "supporter") return message.channel.send("this is not the supporter channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Supporter"].includes(r.name)) ) return     message.author.send(sayings[result]); // if member is a botadmin, display this too
+            
+    }  }, 
+
+    hulu: {
+    aliases:["hulu"],
+    usage: "+hulu",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["Here is your Hulu Account: sgtrock0311@yahoo.com:cowboys"
+,"Here is your Hulu Account: irishpch33@aol.com:beary88"
+,"Here is your Hulu Account: joshuabrem@gmail.com:LedZep8734"
+,"Here is your Hulu Account: brandon.roupe@gmail.com:Vision123"
+,"Here is your Hulu Account: gecko2945@gmail.com:gotenks1"
+,"Here is your Hulu Account: leannester@yahoo.com:holly11"
+,"Here is your Hulu Account: janelson1126@gmail.com:jnv91290"
+,"Here is your Hulu Account: abtlife@arctic.net:Truck111"
+,"Here is your Hulu Account: lzmaranan@gmail.com:mjkobe13"
+,"Here is your Hulu Account: acalzaretta@gmail.com:Hookme01"
+,"Here is your Hulu Account: whitneywiseman4251@gmail.com:Dontcare1"
+,"Here is your Hulu Account: niawilson94@yahoo.com:g00dl1f3"
+,"Here is your Hulu Account: luke.j.moran@gmail.com:85048phx"
+,"Here is your Hulu Account: mark_manderville@hotmail.com:feb121973"
+,"Here is your Hulu Account: dawsmaster@hotmail.com:ilmmad28"
+,"Here is your Hulu Account: lakeside1023@gmail.com:lakeside77"
+,"Here is your Hulu Account: joeypalo@gmail.com:Stimey11"
+,"Here is your Hulu Account: ginger_457@yahoo.com:brittney57"
+,"Here is your Hulu Account: bnbwatawut@hotmail.com:1954@finish"
+,"Here is your Hulu Account: Dlh241@gmail.com:Coke9395"
+,"Here is your Hulu Account: dalia1957@aol.com:tootsie1128"
+,"Here is your Hulu Account: burnsjacob56@yahoo.com:spartan117"
+,"Here is your Hulu Account: marko80@bellsouth.net:bears8008"
+,"Here is your Hulu Account: cmbryce34@gmail.com:edward104"
+,"Here is your Hulu Account: budderisawsom3@gmail.com:zootycoon2"
+,"Here is your Hulu Account: jregarcia77@hotmail.com:gerardo77"
+,"Here is your Hulu Account: andrew.jinsoo@yahoo.com:link6769"
+,"Here is your Hulu Account: rjthomas55@gmail.com:Richard01"
+,"Here is your Hulu Account: josht7410@live.com:Roscoe8420"
+,"Here is your Hulu Account: roughhough0@yahoo.com:Paradox07"
+,"Here is your Hulu Account: conorrmonks@gmail.com:conor123"
+,"Here is your Hulu Account: ron.george40@yahoo.com:sarabess1"
+,"Here is your Hulu Account: jdlahaie@yahoo.com:desirae1"
+,"Here is your Hulu Account: Metasonic58@yahoo.com:chardy58"
+,"Here is your Hulu Account: huzah7@gmail.com:azq121189"
+,"Here is your Hulu Account: Daniross1978@hotmail.com:georgie0330"
+,"Here is your Hulu Account: joeyw_mcd@yahoo.com:Xavier1Ender"
+,"Here is your Hulu Account: billywink3@gmail.com:Abbakoo5334"
+,"Here is your Hulu Account: Alexander.rogel102@gmail.com:OVJH9533"
+,"Here is your Hulu Account: soulpurposeprod@hotmail.com:Legolas12"] 
+      var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "supporter") return message.channel.send("this is not the supporter channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Supporter"].includes(r.name)) ) return  message.author.send(sayings[result]); // if member is a botadmin, display this too
+
+    }  }, 
+    creditcard: {
+    aliases:["creditcard"],
+    usage: "+creditcard",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["Here is your Credit Card (Use UK VPN): 4792938202618216|03|2022|152"
+,"Here is your Credit Card (Use UK VPN): 4792933245521634|11|2021|213"
+,"Here is your Credit Card (Use UK VPN): 4792937258752358|09|2024|543"
+,"Here is your Credit Card (Use UK VPN): 4792935284767374|09|2022|849"
+,"Here is your Credit Card (Use UK VPN): 4792938338630242|04|2025|254"
+,"Here is your Credit Card (Use UK VPN): 4792930676313408|12|2021|996"
+,"Here is your Credit Card (Use UK VPN): 4792931476045687|04|2024|689"
+,"Here is your Credit Card (Use UK VPN): 4792931432037471|11|2025|972"
+,"Here is your Credit Card (Use UK VPN): 4792932080286717|04|2024|288"
+,"Here is your Credit Card (Use UK VPN): 4792936836556315|04|2024|650"
+,"Here is your Credit Card (Use UK VPN): 4792935474088441|09|2022|656"
+,"Here is your Credit Card (Use UK VPN): 4792930638178261|11|2023|214"
+,"Here is your Credit Card (Use UK VPN): 4792934101674830|10|2021|604"
+,"Here is your Credit Card (Use UK VPN): 4792937002352844|11|2024|270"
+,"Here is your Credit Card (Use UK VPN): 4792938576575802|02|2022|137"
+,"Here is your Credit Card (Use UK VPN): 4792937605700118|03|2025|360"
+,"Here is your Credit Card (Use UK VPN): 4792930420616650|06|2024|258"
+,"Here is your Credit Card (Use UK VPN): 4792937602702463|01|2024|608"
+,"Here is your Credit Card (Use UK VPN): 4792933581841588|10|2023|813"
+,"Here is your Credit Card (Use UK VPN): 4792931358857241|12|2024|275"
+,"Here is your Credit Card (Use UK VPN): 4792936603386680|02|2025|130"
+,"Here is your Credit Card (Use UK VPN): 4792937323037330|10|2025|858"
+,"Here is your Credit Card (Use UK VPN): 4792934160684126|08|2024|526"
+,"Here is your Credit Card (Use UK VPN): 4792935044761576|11|2022|118"
+,"Here is your Credit Card (Use UK VPN): 4792938314068508|03|2021|385"
+,"Here is your Credit Card (Use UK VPN): 4792934077650632|08|2023|664"
+,"Here is your Credit Card (Use UK VPN): 4792935500000170|05|2025|970"
+,"Here is your Credit Card (Use UK VPN): 4792937441255533|02|2024|338"
+,"Here is your Credit Card (Use UK VPN): 4792938273161476|06|2025|357"
+,"Here is your Credit Card (Use UK VPN): 4792937800442714|01|2025|223"
+,"Here is your Credit Card (Use UK VPN): 4792934844443055|09|2024|291"
+,"Here is your Credit Card (Use UK VPN): 4792937871667876|08|2025|554"
+,"Here is your Credit Card (Use UK VPN): 4792934317073223|10|2021|730"
+,"Here is your Credit Card (Use UK VPN): 4792934102558487|11|2024|214"
+,"Here is your Credit Card (Use UK VPN): 4792932231235241|01|2022|501"
+,"Here is your Credit Card (Use UK VPN): 4792932367071873|07|2024|651"
+,"Here is your Credit Card (Use UK VPN): 4792936117654821|05|2021|304"
+,"Here is your Credit Card (Use UK VPN): 4792937467216575|08|2025|874"
+,"Here is your Credit Card (Use UK VPN): 4792936124788554|07|2025|957"
+,"Here is your Credit Card (Use UK VPN): 4792932048065526|04|2022|844"
+,"Here is your Credit Card (Use UK VPN): 4792933400068421|07|2025|207"
+,"Here is your Credit Card (Use UK VPN): 4792937656008841|08|2021|926"
+,"Here is your Credit Card (Use UK VPN): 4792930367510346|03|2023|245"
+,"Here is your Credit Card (Use UK VPN): 4792930614388132|08|2025|885"
+,"Here is your Credit Card (Use UK VPN): 4792933088011545|05|2021|407"
+,"Here is your Credit Card (Use UK VPN): 4792938328447201|10|2022|388"
+,"Here is your Credit Card (Use UK VPN): 4792936784701301|03|2023|624"] 
+      var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "supporter") return message.channel.send("this is not the supporter channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Supporter"].includes(r.name)) ) return  message.author.send(sayings[result]); // if member is a botadmin, display this too
+
+    }  }, 
+    origin: {
+    aliases:["origin"],
+    usage: "+origin",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["The Origin Account Details:. antihiatus@gmail.com:Kristanna7"
+,"The Origin Account Details:. Dragonhatch1@hotmail.com:Dragon1155"
+,"The Origin Account Details:. tim.perry1010@gmail.com:1Redsox10"
+,"The Origin Account Details:. blackdeathdraco@myself.com:Dr@gon10"
+,"The Origin Account Details:. darkwolf0912@aol.com:Rouge1997"
+,"The Origin Account Details:. patriktoniutti@gmail.com:Patton2004"
+,"The Origin Account Details:. zakk1234@live.com:Zp102494!"
+,"The Origin Account Details:. hw8pzl@gmail.com:Macgyver8"
+,"The Origin Account Details:. toxicraven14@gmail.com:Rally123"
+,"The Origin Account Details:. djannexalpha@yahoo.com:E33bac1903"
+,"The Origin Account Details:. deathdiraf@hotmail.com:Nymphetamine03"
+,"The Origin Account Details:. josemanuelgutierrezramos@gmail.com:Josemanuel123"
+,"The Origin Account Details:. lucasgabriel4321@hotmail.com:Oliveira10@"
+,"The Origin Account Details:. jaydon.vriens@gmail.com:Kikker16"
+,"The Origin Account Details:. beyaz0633@gmail.com:159357456852qQ"
+,"The Origin Account Details:. Tim0905@outlook.com:Thomas2107"
+,"The Origin Account Details:. montgomery.alexander@ymail.com:Nutcase424"
+,"The Origin Account Details:. valentinazeraus1@gmail.com:Converse1212"
+,"The Origin Account Details:. bobjoe67@gmail.com:Cannonhead67"
+,"The Origin Account Details:. rourkws@aol.com:1Sabrina1"
+,"The Origin Account Details:. Matthewcampos2001@gmail.com:Feb132001"
+,"The Origin Account Details:. crimsonspiral96@gmail.com:Xenoblade2"
+,"The Origin Account Details:. alice.kurousagi17@gmail.com:amichan14"
+,"The Origin Account Details:. sammasri1998@yahoo.co.uk:pruthU4u"
+,"The Origin Account Details:. deskainy@gmail.com:Pheonix415189114"
+,"The Origin Account Details:. elirel22@gmail.com:Crappy999"
+,"The Origin Account Details:. patrickstewart.boss@gmail.com:Dmq12345"
+,"The Origin Account Details:. monkeyboy3002@yahoo.com:Guinevere1234"
+,"The Origin Account Details:. marcelzaghis81@yahoo.it:mzaghis1981"
+,"The Origin Account Details:. RiseSeptimusPrime@yahoo.com:Shepard316"
+,"The Origin Account Details:. drakeoraine@gmail.com:Hydroflame66"
+,"The Origin Account Details:. magnussigfridsson@hotmail.com:Fujitsu600"
+,"The Origin Account Details:. darkpenguin0637@gmail.com:s0344s0344"
+,"The Origin Account Details:. thenomadicpineapple@gmail.com:bruce3899"
+,"The Origin Account Details:. anthony.hayhoe.89@live.co.uk:Hayhoea830029"
+,"The Origin Account Details:. levcike@citromail.hu:Diggler69"
+,"The Origin Account Details:. guardiangamer@gmail.com:Bobo1234*"
+,"The Origin Account Details:. Thomascedric55@yahoo.com:Grapejuice3"
+,"The Origin Account Details:. krrwhite5@gmail.com:Gingerthedog1"
+,"The Origin Account Details:. slay696gmer@gmail.com:Gizmo200"] 
+      var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "supporter") return message.channel.send("this is not the Supporter channel you can only use it there") 
+
+
+              if(message.member.roles.some(r=>["- Supporter"].includes(r.name)) ) return message.author.send(sayings[result]); 
+  
+    }  }, 
+    steam: {
+    aliases:["steam"],
+    usage: "+steam",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["Here is your Steam account details: GrubbySwankyPheasant:Hugepurple55"
+,"Here is your Steam account details: LegalAboundingDog:Happypaper23"
+,"Here is your Steam account details: AcidFascinatedGoshawk:Mistyice94"
+,"Here is your Steam account details: GloriousMagnificentMouse:Hotskunk41"
+,"Here is your Steam account details: BoundlessPeacefulMeerkat:Quickbook53"
+,"Here is your Steam account details: TerribleValuableSwallow:Cutesky58"
+,"Here is your Steam account details: NeighborlyOutrageousSandpiper:Bestpuppy36"
+,"Here is your Steam account details: undefined:undefined"
+,"Here is your Steam account details: AwesomeCynicalHummingbird:Murkypart58"
+,"Here is your Steam account details: RattySynonymousHawk:Shinymagic57"
+,"Here is your Steam account details: SmoothScrawnyWoodpecker:Thinhouse71"
+,"Here is your Steam account details: SilentLudicrousSpoonbill:Longpoint51"
+,"Here is your Steam account details: ImpossibleTroubledEmu:Thingopher40"
+,"Here is your Steam account details: IncompetentPriceyFinch:Shinyshow46"
+,"Here is your Steam account details: AnnoyedJumpyLion:Heavysleep98"
+,"Here is your Steam account details: QuestionableVerdantSeahorse:Kindgate59"
+,"Here is your Steam account details: LovelyPeriodicFinch:Funnygoat31"] 
+      var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "premium") return message.channel.send("this is not the premium channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Premium"].includes(r.name)) ) return message.author.send(sayings[result]); // if member is a botadmin, display this too
+            
+
+    }  }, 
+    spotify: {
+    aliases:["spotify"],
+    usage: "+spotify",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["TheSpotifyAccountDetails:zenocraze21@gmail.com:Awkawkawk1"
+,"The Spotify Account Details:bnbwatawut@hotmail.com:1954@finish"
+,"The Spotify Account Details:ivyzyvi@gmail.com:avninclenet"
+,"The Spotify Account Details:rileyarriola@hotmail.com:payitor2468"
+,"The Spotify Account Details:giovannicalderon8@Gmail.com:calderon1495"
+,"The Spotify Account Details:revelations789@yahoo.com:Linksys233"
+,"The Spotify Account Details:jazzramey28@gmail.com:jazz1001"
+,"The Spotify Account Details:xxtexasmercxx@gmail.com:Texasmerc2"
+,"The Spotify Account Details:bnbwatawut@hotmail.com:1954@finish"
+,"The Spotify Account Details:revelations789@yahoo.com:Linksys233"
+,"The Spotify Account Details:giovannicalderon8@Gmail.com:calderon1495"
+,"The Spotify Account Details:cm416809@gmail.com:highman45"
+,"The Spotify Account Details:ivyzyvi@gmail.com:avninclenet"
+,"The Spotify Account Details:jazzramey28@gmail.com:jazz1001"
+,"The Spotify Account Details:xxtexasmercxx@gmail.com:Texasmerc2"
+,"The Spotify Account Details:rileyarriola@hotmail.com:payitor2468"
+,"The Spotify Account Details:boothadam97@gmail.com:collie17"
+,"The Spotify Account Details:mahoneyalex8@gmail.com:jam050799"
+,"The Spotify Account Details:jdlahaie@yahoo.com:desirae1"
+,"The Spotify Account Details:AbrasiveNegro@gmail.com:regener8"
+,"The Spotify Account Details:trystanp32@gmail.com:1T2t3T4t"
+,"The Spotify Account Details:sonnygaona24@gmail.com:Gao318515"
+,"The Spotify Account Details:frigonsara@yahoo.com:jesse2008"
+,"The Spotify Account Details:tso3rz@gmail.com:ashley23"
+,"The Spotify Account Details:rmayberry90@gmail.com:darkstar90"
+,"The Spotify Account Details:ej7072@gmail.com:braves62"
+,"The Spotify Account Details:mahoneyalex8@gmail.com:jam050799"
+,"The Spotify Account Details:boothadam97@gmail.com:collie17"
+,"The Spotify Account Details:pheonixfire18@hotmail.com:devilt99"
+,"The Spotify Account Details:jakelovesjesus123@gmail.com:butface12"
+,"The Spotify Account Details:dustin.cagle15@gmail.com:whatup12"
+,"The Spotify Account Details:gwaterjetski@gmail.com:1234qwer"
+,"The Spotify Account Details:dustin.cagle15@gmail.com:whatup12"
+,"The Spotify Account Details:sonnygaona24@gmail.com:Gao318515"
+,"The Spotify Account Details:francis.c.decorte@gmail.com:megan2009"
+,"The Spotify Account Details:ThomasLyonPHS@gmail.com:Moosup123"
+,"The Spotify Account Details:Jpmcelroy81@gmail.com:kellen07"
+,"The Spotify Account Details:danvietnguyendoan@yahoo.com:Paswurd1992"] 
+
+            var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "premium") return message.channel.send("this is not the premium channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Premium"].includes(r.name)) ) return    message.author.send(sayings[result]); // if member is a botadmin, display this too
+          
+
+    }  }, 
+  minecraft: {
+    aliases:["minecraft"],
+    usage: "+minecraft",
+    description: "Ask the magic 8 ball!",
+    permissions:"none",
+    category:"fun",
+    do: (message,content) => {
+     var sayings = ["Here is your Minecraft account details: vitalcorruption1@gmail.com:deagenb07"
+,"Here is your Minecraft account details: franvo101@gmail.com:dragben10"
+,"Here is your Minecraft account details: raw1218@gmail.com:Eightzeros0"
+,"Here is your Minecraft account details: tizerpod@gmail.com:calon2207"
+,"Here is your Minecraft account details: blzskiraly@gmail.com:Bala0826"
+,"Here is your Minecraft account details: hugotacito@gmail.com:pombeta123"
+,"Here is your Minecraft account details: elektrykalaj@gmail.com:Adam1024"
+,"Here is your Minecraft account details: jared.willets@yahoo.com:curtis12312"
+,"Here is your Minecraft account details: bluedorkfish@yahoo.com:sammy1217"
+,"Here is your Minecraft account details: drow4363@yahoo.com:lock3113"
+,"Here is your Minecraft account details: r.niedols@gmail.com:robertsn002"
+,"Here is your Minecraft account details: poohsac@msn.com:Frankie23"
+,"Here is your Minecraft account details: tas_2000_2000@yahoo.com:tab2878"
+,"Here is your Minecraft account details: charlotte.reece@tiscali.co.uk:reece1304"
+,"Here is your Minecraft account details: coenbvanlimbeek@gmail.com:Bastiaan29"
+,"Here is your Minecraft account details: evotrance@hotmail.com:Krillin1455"
+,"Here is your Minecraft account details: strongs6@comcast.net:shef8field"
+,"Here is your Minecraft account details: jfm.lisaso@gmail.com:oa19880419"
+,"Here is your Minecraft account details: tylerluis1@gmail.com:tyler0114"
+,"Here is your Minecraft account details: ruben.zanasi@gmail.com:61idiota"
+,"Here is your Minecraft account details: dmccune89@gmail.com:Dillon112599"
+,"Here is your Minecraft account details: jwilmey@hotmail.com:Haruhi01"
+,"Here is your Minecraft account details: jayhalifax@rocketmail.com:applehead1"
+,"Here is your Minecraft account details: tetley.jack@gmail.com:jackt123"
+,"Here is your Minecraft account details: custardtin20vt@yahoo.co.uk:Chloe1707"
+,"Here is your Minecraft account details: dicksonkanhtc@gmail.com:sorata123"
+,"Here is your Minecraft account details: Emdeschacht@yahoo.com.au:bunny2001"
+,"Here is your Minecraft account details: tetley.jack@gmail.com:jackt123 "
+,"Here is your Minecraft account details: custardtin20vt@yahoo.co.uk:Chloe1707 "
+,"Here is your Minecraft account details: dicksonkanhtc@gmail.com:sorata123 "
+,"Here is your Minecraft account details: Emdeschacht@yahoo.com.au:bunny2001 "
+,"Here is your Minecraft account details: laughfly1126@gmail.com:Defg2256 "
+,"Here is your Minecraft account details: tashatastic@live.co.uk:123asd "
+,"Here is your Minecraft account details: gabrielle-zu.salkalten@gmx.de:vivian2509"
+,"Here is your Minecraft account details: seanjoaquim@me.com:4y7p23eh"
+,"Here is your Minecraft account details: robbie_x10@hotmail.co.uk:Saffron1"
+,"Here is your Minecraft account details: ouroborosity@gmail.com:Archway12"
+,"Here is your Minecraft account details: steam.saberty8@gmail.com:Asisko12"
+,"Here is your Minecraft account details: Deanekkeb@gmail.com:hotdogbanaan2000"
+,"Here is your Minecraft account details: alisha.pta@hotmail.com:m0nst3r1"
+,"Here is your Minecraft account details: dtillman74@aol.com:Naynay1!"] 
+      var result = Math.floor((Math.random() * sayings.length) + 0);
+            if (message.channel.name != "premium") return message.channel.send("this is not the premium channel you can only use it there") 
+
+              if(message.member.roles.some(r=>["- Premium"].includes(r.name)) ) return   message.author.send(sayings[result]); // if member is a botadmin, display this too
+            
+
+    }  },
+  
+  random: {
+    aliases:["fortnite"],
+    usage: "+fortnite",
+    description: "Generate",
+    permissions:"- Premium",
+    category:"fun",
+    do: (message,content) => {
+
+      var sayings = ["Filling Soon!"] 
+                  var result = Math.floor((Math.random() * sayings.length) + 0);
+
+
+      if (message.channel.name != "premium") return message.channel.send("this is not the premium channel you can only use it there") 
+              if(message.member.roles.some(r=>["- Premium"].includes(r.name)) )  return     message.author.send(sayings[result]); // if member is a botadmin, display this too
+            
+
+
+    }  },/*
+    unlock: {
+    aliases: [],
+    usage: "unlock",
+    description: "Unlock A Channel",
+    permissions: "channels",
+    category: "mod",
+    do: (message, content) => {
+      if (!functions.checkPerm("channels", message.member, message.author.id)) return message.reply('Invalid Permissions. You must have the `MANAGE_PERMISSIONS` permission to use this command');
+      message.channel.overwritePermissions('481187001211682816', {SEND_MESSAGES: true});
+      message.channel.overwritePermissions(message.guild.defaultRole, {SEND_MESSAGES: true});
+      message.channel.send('<:check:493450040925224961> Channel Sucessfully Unlocked <:check:493450040925224961>')
+    }
+  },*/
+  lock: {
+    aliases: [],
+    usage: "lock",
+    description: "Lock A Channel",
+    permissions: "channels",
+    category: "mod",
+    do: (message, content) => {
+    var HelpEmbed = new Discord.RichEmbed()
+  .setColor('BLUE')
+  .setTitle('📬 Help successfully sent!');
+  message.channel.send({embed: HelpEmbed});
+  var Help2Embed = new Discord.RichEmbed()
+  .setAuthor('Help Page For ' + client.user.username)
+  .setColor('GREEN')
+  .setDescription('Here are all the commands I could find! :smiley:')
+  .addField('ping', '-Sends the ping.')
+  .addField('croles', '-Creates all the roles the bot needs.')
+  .addField('agree', '-Gives the role called `Member`. _PS: It is case sensitive_.')
+  .addField('invite', '-Sends the clients invite link.')
+  .addField('info', '-Sends the clients information.')
+  .addField('guildinfo', '-Sends the guilds information.')
+  .addField('profile', '-Sends yours or a @mention profile information.')
+  .addField('avatar', '-Sends your profile avatar.')
+  .addField('trust', '-This will give a @mention the role `Trusted`.')
+  .addField('untrust', '-This will remove the role `Trusted`.')
+  .addField('v', '-this will give the mentioned player a `VIP` role.')
+  .addField('say', '-Sends a embed of whatever you say.')
+  .addField('8ball', '-Just like a regular 8ball in discord.')
+  .addField('gay', '-Tells you how gay you or a @mention is.')
+  .addField('flip', '-Flips a coin and returns with heads or tails.')
+  .addField('gift', '-Sends a gift to a @mention.')
+  .addField('love', '-loves a @mention.')
+  .addField('nuke', '-Nukes how ever many messages you put.')
+  .addField('mute', '-Mutes a @mention.')
+  .addField('unmute', '-Unmutes a @mention.')
+  .addField('warn', '-Warns a @mention, you must provide a reason.')
+  .addField('unwarn', '-Unwarns a @mention, you must provide a reason for the unwarn.')
+  .addField('kick', '-Kicks a @mention, you can also provide a reason.')
+  .addField('ban', '-Bans a @mention and you can also provide a reason.')
+  .setFooter(client.user.username, client.user.avatarURL);
+  message.author.send({embed: Help2Embed});
+}
+
+  },/*
+   purge: {
+    aliases:["prune"],
+    usage: "purge (1-99)",
+    description:"Bulk delete messages in your channel",
+    permissions:"MANAGE_MESSAGES",
+    category:"",
+    do: (message, content) => {
+      var numb = message.content.substring(8)
+      if(!functions.checkPerm("messages", message.member, message.author.id)) return message.channel.send("You must have the following permission(s) to run this command: `MANNAGE_MESSAGES`");
+      if(!functions.cHasPerm("messages", message.guild)) return message.channel.send("I must have the following permission(s) to run this command: `MANNAGE_MESSAGES`");
+      if(!functions.isNumber(numb)) return message.channel.send("Please input the amount of messages to delete. This must be a number. **Usage:** `ch!purge (1-99)`")
+      if(numb.includes(".")) return message.channel.send("Number must be a whole number, 1-99. **Usage:** `ch!purge (1-99)`")
+      if(numb > 99 || numb < 1) return message.channel.send("The amount of messages must be a number from 1-99. **Usage:** `ch!purge (1-99)`")
+      var num = Number(numb)
+      message.channel.bulkDelete(num + 1)
+        .then(messages => message.channel.send(`**${message.author.tag}**: Successfully purged messages`)).then ((msg) => {
+          setTimeout(() => {
+            msg.delete()
+          }, 5000)
+      })
+    }
+  },*/
+  giveaway: {
+    aliases:[],
+    usage: "giveaway (item) | (time in minutes) | (giveaway description) | (attachment url) | (DM to winner)",
+    description: "Giveaway for The hosts",
+    permissions: "upvote",
+    category: "other",
+    do: (message, content) => {
+      let embed = new Discord.RichEmbed()
+      var commandData = message.content.substring(10).split(" | ")
+      var item = commandData[0]
+      var time = commandData[1]
+      var desc = commandData[2]
+      var url = commandData[3]
+      var dm = commandData[4]
+      if (!commandData || commandData === "") return message.reply("please include the command arguments: **Usage:** `giveaway (item) | (time in minutes) | (giveaway description) | (attachment url) | (DM to winner)`");
+      if (!time || time === "" || !functions.isNumber(time)) return message.reply("Please include the time in minutes you would like the giveaway to last. It must be a number. **Usage:** `progiveaway (item) | (time in minutes) | (giveaway description) | (attachment url) | (DM to winner)`");
+      if (time > 4320 || time < 1 || time.includes(".")) return message.reply(`You set the giveaway for \`${time}\`, but it must be under \`3 days\` or \`4320 Minutes\` or  at least \`1 Minute\`.`);
+      if(!desc || desc === "") return message.reply("Please include the giveaway description.");
+      if(!url || url === "" || !url.startsWith("https://")) return message.reply("Please include a valid url. It must start with `https://`. **Usage:** `progiveaway (item) | (time in minutes) | (giveaway description) | (attachment url) | (DM to winner)`");
+      if(!dm || dm === "") return message.reply("Please include a message to DM the user who wins.");
+      var mstime = time * 60000;
+      message.delete()
+      message.channel.send(":tada: !! GIVEAWAY !! :tada:")
+      embed.setTitle(item)
+      embed.setDescription(`${desc}                React with :tada: to join in!\n**Time Remaining:** \`${functions.mtrl(mstime)}\``)
+      embed.setColor("#0cf0f4")
+      embed.setImage(url)
+      embed.setTimestamp()
+      embed.setFooter(`Good Luck!`)
+      message.channel.send(embed).then ((msg) => {
+      data2.progiveaways[msg.id] = [mstime, message.channel.id, item, message.author.id, desc, url, dm];
+      data2.currentprogiveaways.push(msg.id)
+      fs.writeFileSync("data.json", JSON.stringify(data2));
+      console.log(data2.progiveaways)
+      msg.react("🎉")
+      })
+}
+  },
+  /*
+  Emoji: {
+   aliases: ["emoji"], 
+  usage: "emoji", 
+  description: "sends a Nitro emoji",
+    permission:  "none", 
+    category: "", 
+  do: (message,content) => {
+    message.delete() 
+  message.channel.sendMessage ("<a:PartyParrot2:485235413489942540>") 
+  } },
+  
+  emoji2:{
+    aliases:["emoji2"], 
+    usage: "emoji2", 
+    description: "Sends a Nitro emojis",
+    permissions: "none",
+    category: "",
+    do: (message,content) => {
+      message.delete() 
+      message.channel.sendMessage ("<a:partyblob:485235456221642769>")
+    }    }, */
+  say: {
+    aliases: ["say"],
+    usage: "say (word)",
+    description: "sends Whatever you want the bot to say",
+    permissions: "none",
+    category: "other",
+    do: (message,content) => {
+  
+    if (!admins.includes(message.author.id)) return;
+    var content = message.content.substring(5)
+    message.delete()
+    message.channel.send(content)
+    } },/*
+  poll: {
+    aliases:[],
+    usage: "poll (message)",
+    description: "Create a poll for users to vote on",
+    permissions: "everyone",
+    category: "chnlfeatures",
+    do: (message, content) => {
+      var content = message.content.substring(6)
+      let embed = new Discord.RichEmbed()
+      embed.setAuthor("Poll:", message.author.avatarURL)
+      embed.setTitle(content)
+      embed.setDescription(`Poll by ${message.author}!`)
+      embed.setTimestamp()
+      embed.setColor(0x55D23F)
+      message.delete()
+      message.channel.send(embed).then(msg => {
+        msg.react("👍").then(() => {
+          msg.react("👎").then(() => {
+            msg.react("🤷")
+          })
+        });
+      })
+    }
+
+  },
+   /* ban: {
+    aliases: [],
+    usage: "ban (user-id) | (reason)",
+    description: "Ban A User/Bot",
+    permissions: "ban",
+    category: "mod",
+    do: (message, content) => {
+      if (!functions.checkPerm("ban", message.member, message.author.id)) return message.reply('Invalid Permissions. You must have the `BAN_MEMBERS` permission to use this command');
+      var kick = message.content.substring(6).split(' | ')
+      var userID = functions.sti(kick[0])
+      var userguild = client.guilds.get(message.guild.id).members.get(userID)
+      var user = client.users.get(userID)
+      if (!userguild || userguild === '') return message.reply('User is not on ' + message.guild)
+      if (!userID|| userID === '') return message.reply('Please include a user ID/mention');
+      userguild.ban(kick[1])
+      message.reply(`${user} has been banned for ${kick[1]}.`)
+    }
+  },
+    kick: {
+    aliases: [],
+    usage: "kick (user-id) | (reason)",
+    description: "Kick A User/Bot",
+    permissions: "kick",
+    category: "mod",
+    do: (message, content) => {
+      if (!functions.checkPerm("kick", message.member, message.author.id)) return message.reply('Invalid Permissions. You must have the `KICK_MEMBERS` permission to use this command');
+      var kick = message.content.substring(7).split(' | ')
+      var userID = functions.sti(kick[0])
+      var userguild = client.guilds.get(message.guild.id).members.get(userID)
+      var user = client.users.get(userID)
+      if (!userguild || userguild === '') return message.reply('User is not on ' + message.guild)
+      if (!userID|| userID === '') return message.reply('Please include a user ID');
+      userguild.kick(kick[1])
+      message.reply(`${user} has been kicked for ${kick[1]}.`)
+    }
+  },
+  help: {
+  aliases: ["commands", "cmds", "channeltypes"],
+  usage: "help",
+  description: "Shows all commands for the bot",
+  permissions: "everyone",
+  category: "other",
+  do: (message, content) => {
+    console.log("hi")
+    let cats = {
+      fun: "",
+      mod: "",
+      other: "",
+
+    };
+    let embed = new Discord.RichEmbed()
+      .setAuthor("Ocean Community Commands", client.user.avatarURL);
+    for(var i in commands) {
+      if(commands[i].category === "fun")
+        cats.fun += `${commands[i].usage}\n`;
+      if(commands[i].category === "mod")
+        cats.mod += `${commands[i].usage}\n` ;
+      if(commands[i].category === "other")
+        cats.other += `${commands[i].usage}\n` ;
+    }
+    embed.setDescription("My prefix is `$`, meaning all commands can be run with `$command`.")
+    embed.addField("Moderation", cats.mod, true);
+    embed.addField("Other", cats.other, true);
+    embed.addField("Fun", cats.fun + '\n\n', true); //[Invite](https://discord.gg/v6YMfjj)
+    embed.addBlankField()
+    embed.setColor(0x64d067);
+    embed.setTimestamp()
+    message.channel.send(embed);
+  }
+},*/
+
+
+
+}
+client.on("guildMemberAdd", member => {
+  if (member.guild.id === "474857840507617280") {
+    member.send("Welcome to **Roblox Ultimate Hangout** enjoy your time in there! < :partyparrot:427190539796873256>")
+  }
+}) 
+
+
+
+client.on("message", (message) => {
+  if(message.author.bot || message.channel.type !== "text") return;
+  if(message.content.toLowerCase().startsWith("+")) {
+    for(let i in commands) {
+      if(message.content.toLowerCase().split(" ")[0].slice(1) === i || commands[i].aliases.includes(message.content.toLowerCase().split(" ")[0].slice(1))) {
+        console.log(`${message.author.tag} used the ${commands[i].usage} command in ${message.guild.name}`)
+        if (functions.cHasPerm("server", message.guild)) return commands[i].do(message, message.content.split(" ").splice(0));;
+        if (commands[i].permissions.includes("channels")) {
+          if (functions.cHasPerm("channels", message.guild)) {
+            commands[i].do(message, message.content.split(" ").splice(0));
+          } else {
+            let embed = new Discord.RichEmbed()
+            embed.setAuthor("Error", client.user.avatarURL)
+            embed.setTitle("I need the MANAGE_CHANNELS permission for this command to work!")
+            embed.setDescription("Please give me the permission or a role with this permission")
+            embed.setTimestamp()
+            embed.setColor(0x64d067)
+            embed.setFooter(" Ocean Community Command", message.author.avatarURL)
+            message.channel.send(embed)
+          }
+        } else {
+          if (commands[i].permissions.includes("kick")) {
+          if (functions.cHasPerm("kick", message.guild)) {
+            commands[i].do(message, message.content.split(" ").splice(0));
+          } else {
+            let embed = new Discord.RichEmbed()
+            embed.setAuthor("Error", client.user.avatarURL)
+            embed.setTitle("I need the KICK_MEMBERS permission for this command to work!")
+            embed.setDescription("Please give me the permission or a role with this permission")
+            embed.setTimestamp()
+            embed.setColor(0x64d067)
+            embed.setFooter("Ocean Community Command", message.author.avatarURL)
+            message.channel.send(embed)
+          }
+        } else {
+          if (commands[i].permissions.includes("ban")) {
+          if (functions.cHasPerm("ban", message.guild)) {
+            commands[i].do(message, message.content.split(" ").splice(0));
+          } else {
+            let embed = new Discord.RichEmbed()
+            embed.setAuthor("Error", client.user.avatarURL)
+            embed.setTitle("I need the BAN_MEMBERS permission for this command to work!")
+            embed.setDescription("Please give me the permission or a role with this permission")
+            embed.setTimestamp()
+            embed.setColor(0x64d067)
+            embed.setFooter("Ocean Community Command", message.author.avatarURL)
+            message.channel.send(embed)
+          }
+        } else {
+          commands[i].do(message, message.content.split(" ").splice(0));
+        }
+        }
+        }
+      };
+    }
+  }
+});
